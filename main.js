@@ -114,29 +114,29 @@ function createWorld() {
         0,
     ));
     gameObjects[0].updateMassFromRadius();
-    // gameObjects.push(new Circle(context,
-    //     500,
-    //     650,
-    //     0,
-    //     0,
-    //     17.37,
-    //     33.40,
-    //     1,
-    // ));
-    // gameObjects[1].updateMassFromRadius();
+    gameObjects.push(new Circle(context,
+        500,
+        650,
+        0,
+        0,
+        17.37,
+        33.40,
+        1,
+    ));
+    gameObjects[1].updateMassFromRadius();
 
-    for (let i = 0; i < NUMBEROFOBJECTS; i++) {
-        gameObjects.push(new Circle(context,
-            Math.floor(Math.random() * MAPSIZEX),
-            Math.floor(Math.random() * MAPSIZEY),
-            Math.floor(Math.random() * 500) - 250,
-            Math.floor(Math.random() * 500) - 250,
-            17,37,
-            33.40,
-            i + 1,
-        ));
-        gameObjects[i + 1].updateMassFromRadius();
-    }
+    // for (let i = 0; i < NUMBEROFOBJECTS; i++) {
+    //     gameObjects.push(new Circle(context,
+    //         Math.floor(Math.random() * MAPSIZEX),
+    //         Math.floor(Math.random() * MAPSIZEY),
+    //         Math.floor(Math.random() * 500) - 250,
+    //         Math.floor(Math.random() * 500) - 250,
+    //         17.37,
+    //         33.40,
+    //         i + 1,
+    //     ));
+    //     gameObjects[i + 1].updateMassFromRadius();
+    // }
 
     return;
 }
@@ -156,14 +156,16 @@ function updateGameObjects() {
     }
 }
 function createDebris(large, small) {
-    let numberOfNewObjects = Math.floor(Math.random() * MAXNUMBEROFDEBRIS) + MINNUMBEROFDEBRIS;
+    // let numberOfNewObjects = Math.floor(Math.random() * MAXNUMBEROFDEBRIS) + MINNUMBEROFDEBRIS;
     if (small.mass < Math.pow(10, 5)) { numberOfNewObjects = 0; }
     let removedMass = small.mass * SHOCKMASSTRANSFERRATE;
     let absorbedMass = removedMass * 0.25;
     let newMassToNewObjects = removedMass * 0.75;
-    let temp_i = gameObjects.length;
-    for (let i = temp_i; i < numberOfNewObjects + temp_i; i++) {
-        let newObjectMass = newMassToNewObjects / numberOfNewObjects;
+
+    let massUsed = 0;
+    while (massUsed < newMassToNewObjects) {
+        let newMassObject = newMassToNewObjects / Math.round((Math.random() * 20) + 1);
+        massUsed += newMassObject;
 
         let index = gameObjects.push(new Circle(context,
             small.x,
@@ -172,11 +174,12 @@ function createDebris(large, small) {
             Math.floor(Math.random() * 500) - 250,
             0,
             33.40,
-            i,
+            gameObjects.length,
         ));
-        gameObjects[index - 1].mass = newObjectMass;
+        gameObjects[index - 1].mass = newMassObject;
         gameObjects[index - 1].updateRadiusFromMass();
     }
+
 
     small.mass -= removedMass;
     large.mass += absorbedMass;
