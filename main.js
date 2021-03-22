@@ -6,14 +6,13 @@ const MAPSIZEX = 1300;
 const MAPSIZEY = 900;
 const EDGERESTITUTION = 0.9;
 const COLLISIONRESTITUTION = 0.9;
-const SHOCKMASSTRANSFERRATE = 0.1;
-const NUMBEROFOBJECTS = 50;
-const MINNUMBEROFDEBRIS = 2;
-const MAXNUMBEROFDEBRIS = 6 - MINNUMBEROFDEBRIS;
+const SHOCKMASSTRANSFERRATE = 0.7;
+const NUMBEROFOBJECTS = 20;
+const DEBRISRATE = 40;
+const MINMASSTOLIVE = 100;
 const G = 6.6743 * Math.pow(10, -11);
 
-
-
+// the rate of the display (10 makes it 1:10)
 const DISPLAYRATE = 1;
 
 
@@ -148,7 +147,7 @@ function clearCanvas() {
 }
 function updateGameObjects() {
     for (let i = 0; i < gameObjects.length; i++) {
-        if (gameObjects[i].mass < 100) {
+        if (gameObjects[i].mass < MINMASSTOLIVE) {
             gameObjects = gameObjects.filter((_, index) => { return index != i }); // remove the object from the array
             i--;
         }
@@ -156,15 +155,25 @@ function updateGameObjects() {
     }
 }
 function createDebris(large, small) {
-    // let numberOfNewObjects = Math.floor(Math.random() * MAXNUMBEROFDEBRIS) + MINNUMBEROFDEBRIS;
-    if (small.mass < Math.pow(10, 5)) { numberOfNewObjects = 0; }
+    if (small.mass < Math.pow(10, 5)) { // without this if, every object will create debris on shock
+        let removedMass = small.mass * SHOCKMASSTRANSFERRATE;
+        large.mass += removedMass;
+        small.mass -= removedMass;
+
+        small.updateRadiusFromMass();
+        large.updateRadiusFromMass();
+    }
     let removedMass = small.mass * SHOCKMASSTRANSFERRATE;
     let absorbedMass = removedMass * 0.25;
     let newMassToNewObjects = removedMass * 0.75;
 
     let massUsed = 0;
     while (massUsed < newMassToNewObjects) {
-        let newMassObject = newMassToNewObjects / Math.round((Math.random() * 20) + 1);
+        let newMassObject = newMassToNewObjects / Math.round((Math.random() * DEBRISRATE) + 1);
+        if (massUsed + newMassObject > newMassToNewObjects) {
+            // more mass are created than the mass removed from the object
+            newMassObject = newMassToNewObjects - massUsed;
+        }
         massUsed += newMassObject;
 
         let index = gameObjects.push(new Circle(context,
@@ -224,14 +233,6 @@ function circleIntersect(x1, y1, r1, x2, y2, r2) {
 function collisionShock(object1, object2) {
     if (object1.mass > object2.mass) {
         createDebris(object1, object2);
-
-        // let removedMass = small.mass * SHOCKMASSTRANSFERRATE;
-        
-        // small.mass -= removedMass;
-        // large.mass += removedMass * 0.5;
-        
-        // small.updateRadiusFromMass();
-        // large.updateRadiusFromMass();
     } else if (object2.mass > object1.mass) {
         createDebris(object2, object1);
     }
@@ -293,7 +294,7 @@ function gameLoop(timeStamp) {
     // detectEdgeCollisions();
 
     clearCanvas();
-    updateGameObjects();
+    updateGameObjects(); // update the array gameObject -> object with mass less than a certain number will disapear
 
     for (let i = 0; i < gameObjects.length; i++) {
         gameObjects[i].draw();
